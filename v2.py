@@ -8,11 +8,12 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 import streamlit as st
 import os
 pd.set_option('display.max_rows', None)
-
+mpl.rcParams['figure.figsize'] = (12.0, 8.0)
 
 # In[250]:
 
@@ -297,11 +298,13 @@ price_df = price_df.resample('W').last()
 
 st.markdown(f"### Portfolio return")
 df_norm = (price_df/price_df.iloc[0]) * 100
-import matplotlib as mpl
-mpl.rcParams['figure.figsize'] = (12.0, 8.0)
 
 df_norm.plot()
-plt.title(f"portfolio return")
+plt.title(f"portfolio return", fontsize=20)
+plt.grid(linestyle='--', linewidth=0.3)
+plt.xlabel(None)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 #plt.show()
 st.pyplot(plt)
 
@@ -328,6 +331,9 @@ print(f"Correlation coefficient between {tickers[0]} and {tickers[1]} : {correla
 
 sns.jointplot(x=price_df[tickers[0]], y=price_df[tickers[1]], kind='reg', height=10);
 print(f'Correlation: {correlation_coefficient:.4f}')
+plt.grid(True, which='both', linestyle='--', linewidth=0.3)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 #plt.show()
 st.pyplot(plt)
 
