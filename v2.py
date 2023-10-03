@@ -100,6 +100,63 @@ def fetch_financial_data(ticker):
     
     return balance_sheet, income_statement, c_info
 
+def ratio_comparison(compare_ratio, compare_name):
+    global year
+    # Visualization
+    sns.set(style="whitegrid")
+    compare_ratio.plot(kind="bar", figsize=(10, 6))
+    plt.title(f"{compare_name} Comparison year {year}", fontsize=20)
+    #plt.xlabel("Ratios", fontsize=16)
+    #plt.ylabel("Value", fontsize=16)
+    plt.xlabel(None)
+    plt.ylabel(None)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.grid(True, which='both', linestyle='--', linewidth=0.3)
+    plt.tight_layout()
+    plt.legend(title="Companies")
+    plt.show()
+    st.pyplot(plt)
+
+def plotLineChart(ratio_df, ratio_name):
+
+    latest_year = ratio_df.index[-1]  # Get the latest year from the index
+    #print(f"{ratio_name} for the year {latest_year}:")
+    #st.markdown(f"##### {ratio_name} for the year {latest_year}:")
+    
+    # Convert the series to a dictionary and print
+    #ratio_values = ratio_df.loc[latest_year].to_dict()
+    #for ticker, value in ratio_values.items():
+    #    print(f"{ticker}: {value}")
+    #    st.text(f"{ticker}: {value:.4f}")
+    
+    #print("\n")
+
+    #ratio_df.index.name = 'year'
+    #s = ratio_df.style.format({"year": lambda x : '{:d}'.format(x)})
+    #s = ratio_df.style.applymap(lambda x: '{:d}'.format(x) if isinstance(x, int) else x, subset='year')
+    st.markdown(f"##### {ratio_name}")
+    st.table(ratio_df)
+
+    plt.figure(figsize=(12, 6))
+    sns.lineplot(data=ratio_df,linewidth=2)
+
+    # Ensure each year in the dataframe index gets a corresponding tick on the x-axis
+    plt.xticks(ticks=ratio_df.index, labels=ratio_df.index)
+
+    plt.title(f'{ratio_name} Over Years', fontsize=20)
+    #plt.ylabel(ratio_name)
+    plt.ylabel(None)
+    plt.xlabel('Year', fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.grid(True, which='both', linestyle='--', linewidth=0.3)
+    plt.legend(title='Company',loc='center right', fontsize=18)
+    plt.tight_layout()
+    #st.pyplot(plt)
+    plt.show()
+    st.pyplot(plt)
+
 st.sidebar.header('Compare financial ratios between 2 companies')
 ticker1 = st.sidebar.selectbox('Company 1',('L.TO','MSFT','WMT','DOL.TO'))
 ticker2 = st.sidebar.selectbox('Company 2',('MRU.TO','MSFT','WMT','DOL.TO'))
@@ -192,39 +249,6 @@ profitability_ratio['Return on Assets'] = pd.DataFrame({
     ticker: income_statements[ticker]['Return on Assets'] for ticker in tickers
 })
 
-def plotLineChart(ratio_df, ratio_name):
-
-    latest_year = ratio_df.index[-1]  # Get the latest year from the index
-    print(f"{ratio_name} for the year {latest_year}:")
-    st.markdown(f"##### {ratio_name} for the year {latest_year}:")
-    
-    # Convert the series to a dictionary and print
-    ratio_values = ratio_df.loc[latest_year].to_dict()
-    for ticker, value in ratio_values.items():
-        print(f"{ticker}: {value}")
-        st.text(f"{ticker}: {value:.4f}")
-    
-    print("\n")
-
-    plt.figure(figsize=(12, 6))
-    sns.lineplot(data=ratio_df,linewidth=2)
-
-    # Ensure each year in the dataframe index gets a corresponding tick on the x-axis
-    plt.xticks(ticks=ratio_df.index, labels=ratio_df.index)
-
-    plt.title(f'{ratio_name} Over Years', fontsize=20)
-    #plt.ylabel(ratio_name)
-    plt.ylabel(None)
-    plt.xlabel('Year', fontsize=14)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.grid(True, which='both', linestyle='--', linewidth=0.3)
-    plt.legend(title='Company',loc='center right', fontsize=18)
-    plt.tight_layout()
-    #st.pyplot(plt)
-    plt.show()
-    st.pyplot(plt)
-
 
 st.markdown(f"### :blue[Long term Solvency Ratio]")
 current_long_ratios = pd.DataFrame(columns=tickers)
@@ -262,23 +286,7 @@ for ratio_name, ratio_df in profitability_ratio.items():
     
     plotLineChart(ratio_df, ratio_name)
 
-def ratio_comparison(compare_ratio, compare_name):
-    global year
-    # Visualization
-    sns.set(style="whitegrid")
-    compare_ratio.plot(kind="bar", figsize=(10, 6))
-    plt.title(f"{compare_name} Comparison year {year}", fontsize=20)
-    #plt.xlabel("Ratios", fontsize=16)
-    #plt.ylabel("Value", fontsize=16)
-    plt.xlabel(None)
-    plt.ylabel(None)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.grid(True, which='both', linestyle='--', linewidth=0.3)
-    plt.tight_layout()
-    plt.legend(title="Companies")
-    plt.show()
-    st.pyplot(plt)
+
 
 st.markdown(f"### :blue[Financial Ratios Comparison]")
 
@@ -296,11 +304,12 @@ price_df = price_df.resample('W').last()
 
 # In[297]:
 
-st.markdown(f"### Portfolio return")
+st.markdown(f"### :blue[Normalized Historical Return]")
 df_norm = (price_df/price_df.iloc[0]) * 100
 
 df_norm.plot()
-plt.title(f"portfolio return", fontsize=20)
+#plt.title(f"portfolio return", fontsize=20)
+plt.title(None)
 plt.grid(linestyle='--', linewidth=0.3)
 plt.xlabel(None)
 plt.xticks(fontsize=14)
@@ -322,7 +331,7 @@ df_pct.dropna(inplace=True)
 correlation_matrix = df_pct.corr()
 correlation_coefficient = correlation_matrix.iloc[0, 1]
 
-st.markdown(f"### Correlation coefficient between {tickers[0]} and {tickers[1]} : {correlation_coefficient:.4f}")
+st.markdown(f"### :blue[Correlation coefficient between {tickers[0]} and {tickers[1]} : {correlation_coefficient:.4f}]")
 print(f"Correlation coefficient between {tickers[0]} and {tickers[1]} : {correlation_coefficient:.4f}")
 
 
