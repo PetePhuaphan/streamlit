@@ -101,8 +101,8 @@ def fetch_financial_data(ticker):
     return balance_sheet, income_statement, c_info
 
 st.sidebar.header('Compare financial ratios between 2 companies')
-ticker1 = st.sidebar.selectbox('Company 1',('L.TO','MSFT','WMT'))
-ticker2 = st.sidebar.selectbox('Company 2',('MRU.TO','MSFT','WMT'))
+ticker1 = st.sidebar.selectbox('Company 1',('L.TO','MSFT','WMT','DOL.TO'))
+ticker2 = st.sidebar.selectbox('Company 2',('MRU.TO','MSFT','WMT','DOL.TO'))
 
 st.header(f"{ticker1} vs {ticker2}", divider='rainbow')
 tickers = [ticker1,ticker2]
