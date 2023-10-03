@@ -18,6 +18,7 @@ pd.set_option('display.max_rows', None)
 
 
 def fetch_financial_data(ticker):
+    global wherefile
     balance_sheet_file = f"data/{ticker}_balance_sheet.csv"
     income_statement_file = f"data/{ticker}_income_statement.csv"
     cashflow_file = f"data/{ticker}_cashflow.csv"
@@ -29,8 +30,9 @@ def fetch_financial_data(ticker):
         income_statement = pd.read_csv(income_statement_file, index_col=0)
         cashflow = pd.read_csv(cashflow_file, index_col=0)
         c_info = pd.read_csv(info_file, index_col=0)
-        
+        wherefile = "csv"
     else:
+        wherefile = "yfinance"
         stock = yf.Ticker(ticker)
         balance_sheet = stock.balance_sheet
         income_statement = stock.financials
@@ -329,3 +331,4 @@ print(f'Correlation: {correlation_coefficient:.4f}')
 #plt.show()
 st.pyplot(plt)
 
+st.text(f"data fetched from {wherefile}")
