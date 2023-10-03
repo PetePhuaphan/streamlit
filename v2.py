@@ -100,7 +100,7 @@ def fetch_financial_data(ticker):
     
     return balance_sheet, income_statement, c_info
 
-st.sidebar.header('Compare financial ratio between 2 companies')
+st.sidebar.header('Compare financial ratios between 2 companies')
 ticker1 = st.sidebar.selectbox('Company 1',('L.TO','MSFT','WMT'))
 ticker2 = st.sidebar.selectbox('Company 2',('MRU.TO','MSFT','WMT'))
 
@@ -280,7 +280,7 @@ def ratio_comparison(compare_ratio, compare_name):
     plt.show()
     st.pyplot(plt)
 
-st.markdown(f"### :blue[financials Ratio Comparison]")
+st.markdown(f"### :blue[Financial Ratios Comparison]")
 
 ratio_comparison(current_long_ratios, "Long-term Solvency Ratios")
 ratio_comparison(current_short_ratios, "Short-term Solvency Ratios")
