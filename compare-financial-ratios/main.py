@@ -199,11 +199,6 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 with open(info_file, 'r') as file:
                         info_data = json.load(file)
                 print(f"Loaded info for {ticker_symbol} from {info_file}")
-        else:
-                info_data = ticker.info
-                with open(info_file, 'w') as file:
-                        json.dump(info_data, file)
-                print(f"Fetched and saved info for {ticker_symbol} to {info_file}")
 
         ticker_to_name[ticker_symbol] = info_data['shortName']
                 
