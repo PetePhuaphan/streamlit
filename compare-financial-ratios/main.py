@@ -196,9 +196,17 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
 
         # Check if info file exists
         if os.path.exists(info_file):
+                print(f"Loading info for {ticker_symbol} from {info_file}")
                 with open(info_file, 'r') as file:
-                        info_data = json.load(file)
+                    info_data = json.load(file)
                 print(f"Loaded info for {ticker_symbol} from {info_file}")
+        else:
+                print(f"{info_file} not exists")
+                #info_data = ticker.info
+                #with open(info_file, 'w') as file:
+                #        json.dump(info_data, file)
+                #print(f"Fetched and saved info for {ticker_symbol} to {info_file}")
+
 
         ticker_to_name[ticker_symbol] = info_data['shortName']
                 
