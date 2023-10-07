@@ -161,7 +161,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded historical data for {ticker_symbol} from {historical_data_file}")
         else:
                 historical_data = yf.download(ticker_symbol, start=start_date)
-                historical_data.to_csv(historical_data_file)
+                #historical_data.to_csv(historical_data_file)
                 print(f"Fetched and saved historical data for {ticker_symbol} to {historical_data_file}")
         
         # Create a Ticker object
@@ -173,7 +173,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded income statement for {ticker_symbol} from {income_statement_file}")
         else:
                 income_statement = ticker.financials
-                income_statement.to_csv(income_statement_file)
+                #income_statement.to_csv(income_statement_file)
                 print(f"Fetched and saved income statement for {ticker_symbol} to {income_statement_file}")
         
         # Check if balance sheet file exists
@@ -182,7 +182,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded balance sheet for {ticker_symbol} from {balance_sheet_file}")
         else:
                 balance_sheet = ticker.balance_sheet
-                balance_sheet.to_csv(balance_sheet_file)
+                #balance_sheet.to_csv(balance_sheet_file)
                 print(f"Fetched and saved balance sheet for {ticker_symbol} to {balance_sheet_file}")
         
         # Check if cashflow file exists
@@ -191,7 +191,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded cash flow for {ticker_symbol} from {cashflow_file}")
         else:
                 cashflow = ticker.cashflow
-                cashflow.to_csv(cashflow_file)
+                #cashflow.to_csv(cashflow_file)
                 print(f"Fetched and saved cash flow for {ticker_symbol} to {cashflow_file}")
 
         # Check if info file exists
