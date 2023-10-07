@@ -151,7 +151,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
         income_statement_file = f"yfinance/{ticker_symbol}_income_statement.csv"
         balance_sheet_file = f"yfinance/{ticker_symbol}_balance_sheet.csv"
         cashflow_file = f"yfinance/{ticker_symbol}_cashflow.csv"
-        info_file = f"yfinance/{ticker_symbol}_info.json"
+        info_file = f"compare-financial-ratios/yfinance/{ticker_symbol}_info.json"
         
         
         # Check if historical data file exists
