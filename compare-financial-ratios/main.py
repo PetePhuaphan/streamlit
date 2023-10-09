@@ -18,6 +18,8 @@ long_ratios_col = ['Debt to Equity Ratio','Debt Ratio','Equity Multiplier']
 asset_ratios_col = ['Inventory Turnover','Total Asset Turnover','Receivables Turnover']
 profit_ratios_col = ['Net Profit Margin','ROA','ROE']
 
+path_to_dir = "compare-financial-ratios/yfinance/"
+
 start_date = "2020-01-01"
 end_date = "2022-12-31"
 ticker_to_name = {}
@@ -148,11 +150,11 @@ def plot_comparison(comparison_df, tickers, columns):
 def fetch_or_load_data(ticker_symbol, start_date, end_date):
         
         # Filenames with path to yfinance subfolder
-        historical_data_file = f"yfinance/{ticker_symbol}_historical_data.csv"
-        income_statement_file = f"yfinance/{ticker_symbol}_income_statement.csv"
-        balance_sheet_file = f"yfinance/{ticker_symbol}_balance_sheet.csv"
-        cashflow_file = f"yfinance/{ticker_symbol}_cashflow.csv"
-        info_file = f"yfinance/{ticker_symbol}_info.json"
+        historical_data_file = f"{path_to_dir}{ticker_symbol}_historical_data.csv"
+        income_statement_file = f"{path_to_dir}{ticker_symbol}_income_statement.csv"
+        balance_sheet_file = f"{path_to_dir}{ticker_symbol}_balance_sheet.csv"
+        cashflow_file = f"{path_to_dir}{ticker_symbol}_cashflow.csv"
+        info_file = f"{path_to_dir}{ticker_symbol}_info.json"
         
         
         # Check if historical data file exists
