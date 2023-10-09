@@ -86,7 +86,7 @@ def compare_tickers(tickers):
             ratios = calculate_ratios(balance_sheet, income_statement,cashflow)
             ratios['PE']=info_data["trailingPE"]
             ratios['Price to Book']=info_data["priceToBook"]
-            ratios['EV/EBITDA'] = info_data["[enterpriseToEbitda"]
+            ratios['EV/EBITDA'] = info_data["enterpriseToEbitda"]
             ratio_dfs.append(ratios)
 
         # Combine all DataFrames
