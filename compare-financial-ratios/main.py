@@ -84,6 +84,7 @@ def compare_tickers(tickers):
             ratios = calculate_ratios(balance_sheet, income_statement,cashflow)
             ratios['PE']=info_data["trailingPE"]
             ratios['Price to Book']=info_data["priceToBook"]
+            ratios['EV/EBITDA'] = info_data["[enterpriseToEbitda"]
             ratio_dfs.append(ratios)
 
         # Combine all DataFrames
@@ -147,11 +148,11 @@ def plot_comparison(comparison_df, tickers, columns):
 def fetch_or_load_data(ticker_symbol, start_date, end_date):
         
         # Filenames with path to yfinance subfolder
-        historical_data_file = f"compare-financial-ratios/yfinance/{ticker_symbol}_historical_data.csv"
-        income_statement_file = f"compare-financial-ratios/yfinance/{ticker_symbol}_income_statement.csv"
-        balance_sheet_file = f"compare-financial-ratios/yfinance/{ticker_symbol}_balance_sheet.csv"
-        cashflow_file = f"compare-financial-ratios/yfinance/{ticker_symbol}_cashflow.csv"
-        info_file = f"compare-financial-ratios/yfinance/{ticker_symbol}_info.json"
+        historical_data_file = f"yfinance/{ticker_symbol}_historical_data.csv"
+        income_statement_file = f"yfinance/{ticker_symbol}_income_statement.csv"
+        balance_sheet_file = f"yfinance/{ticker_symbol}_balance_sheet.csv"
+        cashflow_file = f"yfinance/{ticker_symbol}_cashflow.csv"
+        info_file = f"yfinance/{ticker_symbol}_info.json"
         
         
         # Check if historical data file exists
@@ -161,7 +162,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded historical data for {ticker_symbol} from {historical_data_file}")
         else:
                 historical_data = yf.download(ticker_symbol, start=start_date)
-                #historical_data.to_csv(historical_data_file)
+                historical_data.to_csv(historical_data_file)
                 print(f"Fetched and saved historical data for {ticker_symbol} to {historical_data_file}")
         
         # Create a Ticker object
@@ -173,7 +174,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded income statement for {ticker_symbol} from {income_statement_file}")
         else:
                 income_statement = ticker.financials
-                #income_statement.to_csv(income_statement_file)
+                income_statement.to_csv(income_statement_file)
                 print(f"Fetched and saved income statement for {ticker_symbol} to {income_statement_file}")
         
         # Check if balance sheet file exists
@@ -182,7 +183,7 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded balance sheet for {ticker_symbol} from {balance_sheet_file}")
         else:
                 balance_sheet = ticker.balance_sheet
-                #balance_sheet.to_csv(balance_sheet_file)
+                balance_sheet.to_csv(balance_sheet_file)
                 print(f"Fetched and saved balance sheet for {ticker_symbol} to {balance_sheet_file}")
         
         # Check if cashflow file exists
@@ -191,22 +192,21 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
                 print(f"Loaded cash flow for {ticker_symbol} from {cashflow_file}")
         else:
                 cashflow = ticker.cashflow
-                #cashflow.to_csv(cashflow_file)
+                cashflow.to_csv(cashflow_file)
                 print(f"Fetched and saved cash flow for {ticker_symbol} to {cashflow_file}")
 
         # Check if info file exists
         if os.path.exists(info_file):
-                print(f"Loading info for {ticker_symbol} from {info_file}")
-                with open(info_file, 'r') as file:
+            print(f"Loading info for {ticker_symbol} from {info_file}")
+            with open(info_file, 'r') as file:
                     info_data = json.load(file)
-                print(f"Loaded info for {ticker_symbol} from {info_file}")
+            print(f"Loaded info for {ticker_symbol} from {info_file}")
         else:
-                print(f"{info_file} not exists")
+            print(f"{info_file} not exists")
                 #info_data = ticker.info
                 #with open(info_file, 'w') as file:
                 #        json.dump(info_data, file)
                 #print(f"Fetched and saved info for {ticker_symbol} to {info_file}")
-
 
         ticker_to_name[ticker_symbol] = info_data['shortName']
                 
@@ -250,8 +250,10 @@ pe = pd.DataFrame(comparison_df.xs("PE", level=1, axis=1).rename(columns=ticker_
 pe = pe.rename(columns={pe.columns[0]: 'PE'})
 bv = pd.DataFrame(comparison_df.xs("Price to Book", level=1, axis=1).rename(columns=ticker_to_name).iloc[-1].round(2))
 bv = bv.rename(columns={bv.columns[0]: 'Price to Book'})
+ev_ebitda = pd.DataFrame(comparison_df.xs("EV/EBITDA", level=1, axis=1).rename(columns=ticker_to_name).iloc[-1].round(2))
+ev_ebitda = ev_ebitda.rename(columns={ev_ebitda.columns[0]: 'EV/EBITDA'})
 
-mv = pd.concat([pe,bv], axis=1)
+mv = pd.concat([pe,bv,ev_ebitda], axis=1)
 
 st.table(mv)
 
