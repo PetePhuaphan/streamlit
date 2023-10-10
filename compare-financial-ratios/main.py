@@ -10,8 +10,13 @@ pd.set_option('display.max_rows', None)
 palette=['#4c72b0', '#dd8452','#939393']
 sns.set_palette(palette)
 
+st.sidebar.header('Compare financial ratios between 2 companies')
+ticker1 = st.sidebar.selectbox('Company 1',('L.TO','DOL.TO','CTC-A.TO','WMT'))
+ticker2 = st.sidebar.selectbox('Company 2',('MRU.TO','DOL.TO','CTC-A.TO','WMT'))
+
 #tickers = ["AAPL", "MSFT", "GOOGL"]
-tickers = ["L.TO","MRU.TO"]
+tickers = [ticker1,ticker2]
+
 index_benchmark = "^GSPTSE"
 short_ratios_col = ['Current Ratio','Quick Ratio','Cash Ratio']
 long_ratios_col = ['Debt to Equity Ratio','Debt Ratio','Equity Multiplier']
@@ -124,15 +129,32 @@ def plot_comparison(comparison_df, tickers, columns):
             current_ratios = pd.DataFrame(columns=tickers)
 
             year = pd.to_datetime(end_date).year
-            for ratio_name in short_ratios_col:
+            for ratio_name in columns:
+                for ticker in tickers:
+                    current_ratios.loc[ratio_name, ticker] = comparison_df[ticker,ratio_name].loc[year]
 
-                    for ticker in tickers:
-                            current_ratios.loc[ratio_name, ticker] = comparison_df[ticker,ratio_name].loc[year]
+            st.table(comparison_df.xs(column, level=1, axis=1).rename(columns=ticker_to_name))
+            #Analysis
+            rt1 = current_ratios[tickers[0]][column].round(4)
+            rt2 = current_ratios[tickers[1]][column].round(4)
+            
+            tn1 = ticker_to_name[tickers[0]]
+            tn2 = ticker_to_name[tickers[1]]
+
+            st.markdown(f"#### {column} analysis")
+            if rt1 > rt2:
+                percent_difference = ((rt1 - rt2) / rt1) * 100
+                #print(f"{tn1}'s {current_ratios.index[0]} is {percent_difference:.2f}% higher than {tn2}'s ({rt1} and {rt2} respectively).")
+                st.markdown(f"In {year}, {tn1}'s {column} is {percent_difference:.2f}% **higher than** {tn2}'s ({rt1} and {rt2} respectively).")
+            elif rt1 < rt2:
+                percent_difference = ((rt2 - rt1) / rt2) * 100
+                #print(f"{tn1}'s {current_ratios.index[0]} is {percent_difference:.2f}% lower than {tn2}'s ({rt1} and {rt2} respectively).")
+                st.markdown(f"In {year}, {tn1}'s {column} is {percent_difference:.2f}% **lower than** {tn2}'s ({rt1} and {rt2} respectively).")
+            else:
+                print(f"In {year}, {tn1} is the same as {tn2}.")
             
             current_ratios=current_ratios.rename(columns=ticker_to_name)
-            
-            st.table(comparison_df.xs(column, level=1, axis=1).rename(columns=ticker_to_name))
-
+        
         # Visualization
         current_ratios.plot(kind="bar", figsize=(12, 8))
         plt.title(f"Ratios Comparison year {year}", fontsize=24)
