@@ -34,7 +34,7 @@ def calculate_ratios(balance_sheet, income_statement,cashflow):
         # Liquidity Ratios
         current_ratio = balance_sheet.loc['Current Assets'] / balance_sheet.loc['Current Liabilities']
         quick_ratio = (balance_sheet.loc['Current Assets'] - balance_sheet.loc['Inventory']) / balance_sheet.loc['Current Liabilities']
-        cash_ratio = balance_sheet.loc['Cash Cash Equivalents And Short Term Investments']/balance_sheet.loc['Current Liabilities']
+        cash_ratio = balance_sheet.loc['Cash And Cash Equivalents']/balance_sheet.loc['Current Liabilities']
         
 
         # Long-term Solvency Ratios
