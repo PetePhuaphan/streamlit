@@ -51,7 +51,7 @@ def calculate_ratios(balance_sheet, income_statement,cashflow):
         receivables_turnover = income_statement.loc['Total Revenue']/balance_sheet.loc['Accounts Receivable']
 
         # Profitability Ratios
-        net_profit_margin = cashflow.loc['Net Income Continuous Operations'] / income_statement.loc['Total Revenue']
+        net_profit_margin = income_statement.loc['Net Income Continuous Operations'] / income_statement.loc['Total Revenue']
         roa = income_statement.loc['Net Income'] / avg_total_assets
         avg_equity = balance_sheet.loc['Total Equity Gross Minority Interest']  # Again, this is a simplification.
         roe = income_statement.loc['Net Income'] / avg_equity
