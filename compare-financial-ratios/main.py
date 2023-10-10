@@ -38,9 +38,10 @@ def calculate_ratios(balance_sheet, income_statement,cashflow):
         
 
         # Long-term Solvency Ratios
-        debt_to_equity = balance_sheet.loc['Total Liabilities Net Minority Interest'] / balance_sheet.loc['Stockholders Equity']
+        #debt_to_equity = balance_sheet.loc['Total Liabilities Net Minority Interest'] / balance_sheet.loc['Stockholders Equity']
+        debt_to_equity = balance_sheet.loc['Total Liabilities Net Minority Interest'] / balance_sheet.loc['Total Equity Gross Minority Interest']
         debt_ratio = balance_sheet.loc['Total Liabilities Net Minority Interest'] / balance_sheet.loc['Total Assets']
-        equity_multiplier = balance_sheet.loc["Total Assets"] / balance_sheet.loc["Stockholders Equity"]
+        equity_multiplier = balance_sheet.loc["Total Assets"] / balance_sheet.loc["Total Equity Gross Minority Interest"]
 
         # Asset Utilization Ratios (assuming COGS and Net Sales are in the income statement)
         avg_inventory = balance_sheet.loc['Inventory']  # A simplification. Ideally, you'd want the average of start & end period inventory.
