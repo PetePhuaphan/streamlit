@@ -27,10 +27,12 @@ path_to_dir = "compare-financial-ratios/yfinance/"
 
 start_date = "2020-01-01"
 end_date = "2022-12-31"
+quarterly_start = "2023-03-31"
+quarterly_end = "2023-06-30"
 ticker_to_name = {}
 price_df = pd.DataFrame()
 
-def calculate_ratios(balance_sheet, income_statement,cashflow):
+def calculate_ratios(balance_sheet, income_statement,cashflow, resample_index=True):
         # Liquidity Ratios
         current_ratio = balance_sheet.loc['Current Assets'] / balance_sheet.loc['Current Liabilities']
         quick_ratio = (balance_sheet.loc['Current Assets'] - balance_sheet.loc['Inventory']) / balance_sheet.loc['Current Liabilities']
@@ -56,9 +58,12 @@ def calculate_ratios(balance_sheet, income_statement,cashflow):
         avg_equity = balance_sheet.loc['Total Equity Gross Minority Interest']  # Again, this is a simplification.
         roe = income_statement.loc['Net Income'] / avg_equity
 
-     # Extracting years from date columns
+        # Extracting years from date columns
         #years = [date.year for date in balance_sheet.columns]
-        years = [pd.to_datetime(date).year for date in balance_sheet.columns]
+        if resample_index:
+            years = [pd.to_datetime(date).year for date in balance_sheet.columns]
+        else:
+            years = [pd.to_datetime(date) for date in balance_sheet.columns]
 
         # Consolidating the ratios into a DataFrame
         df_ratios = pd.DataFrame({
@@ -86,14 +91,17 @@ def calculate_ratios(balance_sheet, income_statement,cashflow):
 def compare_tickers(tickers):
         global start_date, end_date, ticker_to_name, price_df
         ratio_dfs = []
+        quarterly_ratio_dfs = []
         for ticker in tickers:
-            historical_data, income_statement, balance_sheet, cashflow, info_data = fetch_or_load_data(ticker,start_date,end_date)
+            historical_data, income_statement, balance_sheet, cashflow, quarterly_income_statement, quarterly_balance_sheet, quarterly_cashflow, info_data = fetch_or_load_data(ticker,start_date,end_date)
+            quarterly_ratios = calculate_ratios(quarterly_balance_sheet, quarterly_income_statement, quarterly_cashflow, False)
             price_df[ticker]=historical_data['Close']
             ratios = calculate_ratios(balance_sheet, income_statement,cashflow)
             ratios['PE']=info_data["trailingPE"]
             ratios['Price to Book']=info_data["priceToBook"]
             ratios['EV/EBITDA'] = info_data["enterpriseToEbitda"]
             ratio_dfs.append(ratios)
+            quarterly_ratio_dfs.append(quarterly_ratios)
 
         # Combine all DataFrames
         
@@ -101,9 +109,15 @@ def compare_tickers(tickers):
         combined_df = pd.concat(ratio_dfs, axis=1, keys=tickers)
         combined_df = combined_df.sort_index()
         combined_df = combined_df.loc[pd.to_datetime(start_date).year:pd.to_datetime(end_date).year]
-        return combined_df
+        
+        quarterly_combined_df = pd.concat(quarterly_ratio_dfs, axis=1, keys=tickers)
+        quarterly_combined_df = quarterly_combined_df.sort_index()
+        quarterly_combined_df.index = pd.to_datetime(quarterly_combined_df.index)
 
-def plot_comparison(comparison_df, tickers, columns):
+        quarterly_combined_df = quarterly_combined_df.loc[quarterly_start:quarterly_end]
+        return combined_df, quarterly_combined_df
+
+def plot_comparison(comparison_df, quarterly_comparison_df, tickers, columns):
         # Update tickers list using the mapping
         global ticker_to_name, end_date
         tickers_updated = [ticker_to_name[ticker] if ticker in ticker_to_name else ticker for ticker in tickers]
@@ -115,10 +129,28 @@ def plot_comparison(comparison_df, tickers, columns):
             for ticker in tickers:
                 ticker_label = ticker_to_name[ticker]
                 plt.plot(comparison_df.index, comparison_df[(ticker, column)], label=ticker_label, marker='o')
-            plt.title(column + ' over Time', fontsize=24)
-            plt.xlabel('Year', fontsize=18)
+            plt.title('Historical ' + column, fontsize=24)
+            #plt.xlabel('Year', fontsize=18)
             plt.ylabel(column, fontsize=18)
             plt.xticks(ticks=comparison_df.index, labels=comparison_df.index)
+            plt.xticks(fontsize=16)
+            plt.yticks(fontsize=16)
+            plt.legend(fontsize=16)
+            plt.grid(True, which='both', linestyle='--', linewidth=0.3)
+            plt.tight_layout()
+            #plt.show()
+            st.pyplot(plt)
+
+            #quarterly
+            plt.figure(figsize=(12, 8))
+
+            for ticker in tickers:
+                ticker_label = ticker_to_name[ticker]
+                plt.plot(quarterly_comparison_df.index, quarterly_comparison_df[(ticker, column)], label=ticker_label, marker='o')
+            plt.title(column + ' in 2023 (quarterly)', fontsize=24)
+            #plt.xlabel('Year', fontsize=18)
+            plt.ylabel(column, fontsize=18)
+            plt.xticks(ticks=quarterly_comparison_df.index, labels=pd.to_datetime(quarterly_comparison_df.index).date)
             plt.xticks(fontsize=16)
             plt.yticks(fontsize=16)
             plt.legend(fontsize=16)
@@ -135,6 +167,11 @@ def plot_comparison(comparison_df, tickers, columns):
                     current_ratios.loc[ratio_name, ticker] = comparison_df[ticker,ratio_name].loc[year]
 
             st.table(comparison_df.xs(column, level=1, axis=1).rename(columns=ticker_to_name))
+            
+            df = quarterly_comparison_df.xs(column, level=1, axis=1).rename(columns=ticker_to_name)
+            df.index = df.index.strftime("%Y-%m-%d")
+            st.table(df)
+                
             #Analysis
             rt1 = current_ratios[tickers[0]][column].round(4)
             rt2 = current_ratios[tickers[1]][column].round(4)
@@ -170,7 +207,7 @@ def plot_comparison(comparison_df, tickers, columns):
         st.pyplot(plt)
                 
 
-def fetch_or_load_data(ticker_symbol, start_date, end_date):
+def fetch_or_load_data(ticker_symbol, start_date, end_date, include_quarterly=True):
         
         # Filenames with path to yfinance subfolder
         historical_data_file = f"{path_to_dir}{ticker_symbol}_historical_data.csv"
@@ -178,6 +215,14 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
         balance_sheet_file = f"{path_to_dir}{ticker_symbol}_balance_sheet.csv"
         cashflow_file = f"{path_to_dir}{ticker_symbol}_cashflow.csv"
         info_file = f"{path_to_dir}{ticker_symbol}_info.json"
+        
+        quarterly_income_statement_file = f"{path_to_dir}{ticker_symbol}_quarterly_income_statement.csv"
+        quarterly_balance_sheet_file = f"{path_to_dir}{ticker_symbol}_quarterly_balance_sheet.csv"
+        quarterly_cashflow_file = f"{path_to_dir}{ticker_symbol}_quarterly_cashflow.csv"
+        
+        quarterly_income_statement=""
+        quarterly_balance_sheet=""
+        quarterly_cashflow=""
         
         
         # Check if historical data file exists
@@ -195,30 +240,45 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
         
         # Check if income statement file exists
         if os.path.exists(income_statement_file):
-                income_statement = pd.read_csv(income_statement_file, index_col=0)
-                print(f"Loaded income statement for {ticker_symbol} from {income_statement_file}")
+            income_statement = pd.read_csv(income_statement_file, index_col=0)
+            if include_quarterly:
+                quarterly_income_statement = pd.read_csv(quarterly_income_statement_file, index_col=0)
+            print(f"Loaded income statement for {ticker_symbol} from {income_statement_file}")
         else:
-                income_statement = ticker.financials
-                income_statement.to_csv(income_statement_file)
-                print(f"Fetched and saved income statement for {ticker_symbol} to {income_statement_file}")
+            income_statement = ticker.financials
+            income_statement.to_csv(income_statement_file)
+            if include_quarterly:
+                quarterly_income_statement = ticker.quarterly_financials
+                quarterly_income_statement.to_csv(quarterly_income_statement_file)
+            print(f"Fetched and saved income statement for {ticker_symbol} to {income_statement_file}")
         
         # Check if balance sheet file exists
         if os.path.exists(balance_sheet_file):
-                balance_sheet = pd.read_csv(balance_sheet_file, index_col=0)
-                print(f"Loaded balance sheet for {ticker_symbol} from {balance_sheet_file}")
+            balance_sheet = pd.read_csv(balance_sheet_file, index_col=0)
+            if include_quarterly:
+                quarterly_balance_sheet = pd.read_csv(quarterly_balance_sheet_file, index_col=0)
+            print(f"Loaded balance sheet for {ticker_symbol} from {balance_sheet_file}")
         else:
-                balance_sheet = ticker.balance_sheet
-                balance_sheet.to_csv(balance_sheet_file)
-                print(f"Fetched and saved balance sheet for {ticker_symbol} to {balance_sheet_file}")
+            balance_sheet = ticker.balance_sheet
+            balance_sheet.to_csv(balance_sheet_file)
+            if include_quarterly:
+                quarterly_balance_sheet = ticker.quarterly_balance_sheet
+                quarterly_balance_sheet.to_csv(quarterly_balance_sheet_file)
+            print(f"Fetched and saved balance sheet for {ticker_symbol} to {balance_sheet_file}")
         
         # Check if cashflow file exists
         if os.path.exists(cashflow_file):
-                cashflow = pd.read_csv(cashflow_file, index_col=0)
-                print(f"Loaded cash flow for {ticker_symbol} from {cashflow_file}")
+            cashflow = pd.read_csv(cashflow_file, index_col=0)
+            if include_quarterly:
+                quarterly_cashflow = pd.read_csv(quarterly_cashflow_file, index_col=0)
+            print(f"Loaded cash flow for {ticker_symbol} from {cashflow_file}")
         else:
-                cashflow = ticker.cashflow
-                cashflow.to_csv(cashflow_file)
-                print(f"Fetched and saved cash flow for {ticker_symbol} to {cashflow_file}")
+            cashflow = ticker.cashflow
+            cashflow.to_csv(cashflow_file)
+            if include_quarterly:
+                quarterly_cashflow = ticker.quarterly_cashflow
+                quarterly_cashflow.to_csv(quarterly_cashflow_file)
+            print(f"Fetched and saved cash flow for {ticker_symbol} to {cashflow_file}")
 
         # Check if info file exists
         if os.path.exists(info_file):
@@ -235,30 +295,30 @@ def fetch_or_load_data(ticker_symbol, start_date, end_date):
 
         ticker_to_name[ticker_symbol] = info_data['shortName']
                 
-        return historical_data, income_statement, balance_sheet, cashflow, info_data
+        return historical_data, income_statement, balance_sheet, cashflow, quarterly_income_statement, quarterly_balance_sheet, quarterly_cashflow, info_data
 
 
 
 
 
-comparison_df = compare_tickers(tickers)
+comparison_df, quarterly_comparison_df = compare_tickers(tickers)
 
-historical_data, income_statement, balance_sheet, cashflow, info_data = fetch_or_load_data(index_benchmark,start_date,end_date)
+historical_data, income_statement, balance_sheet, cashflow, quarterly_income_statement, quarterly_balance_sheet, quarterly_cashflow, info_data = fetch_or_load_data(index_benchmark,start_date,end_date,False)
 price_df[index_benchmark]=historical_data['Close']
 
 st.header(f"{ticker_to_name[tickers[0]]} vs {ticker_to_name[tickers[1]]}", divider='rainbow')
 
 st.markdown(f"### :blue[Short term Solvency Ratio]")
-plot_comparison(comparison_df, tickers, short_ratios_col)
+plot_comparison(comparison_df, quarterly_comparison_df, tickers, short_ratios_col)
 
 st.markdown(f"### :blue[Long term Solvency Ratio]")
-plot_comparison(comparison_df, tickers, long_ratios_col)
+plot_comparison(comparison_df, quarterly_comparison_df, tickers, long_ratios_col)
 
 st.markdown(f"### :blue[Asset Ratio]")
-plot_comparison(comparison_df, tickers, asset_ratios_col)
+plot_comparison(comparison_df, quarterly_comparison_df, tickers, asset_ratios_col)
 
 st.markdown(f"### :blue[Profitability Ratio]")
-plot_comparison(comparison_df, tickers, profit_ratios_col)
+plot_comparison(comparison_df, quarterly_comparison_df, tickers, profit_ratios_col)
 
 # Index to Datetime, Sample data to week, drop na
 price_df.index = pd.to_datetime(price_df.index)
